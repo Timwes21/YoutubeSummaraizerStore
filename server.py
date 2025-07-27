@@ -41,4 +41,4 @@ app.include_router(info_router, prefix="/get-info")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app)
+    uvicorn.run(app, port="8000")
