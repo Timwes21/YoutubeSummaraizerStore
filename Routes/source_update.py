@@ -1,0 +1,70 @@
+from fastapi import APIRouter
+from get_yt_vid import get_script, get_video_info
+from fastapi.responses import JSONResponse
+from pipelines import organize_docs
+import pydantic_models
+from Databases.FAISS import faiss_save 
+from Databases.redis.redis_client import change_knowlegde_source
+import os
+import shutil
+
+router = APIRouter()
+
+
+def create_library(url):
+    script = get_script(url)
+    title, author = get_video_info(url)
+    organized_docs = organize_docs(script)
+    library = faiss_save.create_library(organized_docs)
+    return title, author, library
+
+@router.post("/save-url", response_class=JSONResponse)
+async def read_url(video: pydantic_models.Video):
+    username = "timwes21"
+    try:
+        title, author, library = create_library(video.url)
+        print("got library")
+        faiss_save.save_to_store(library, f"{username}/videos/{author}:{title}")
+        print("saved video")
+        faiss_save.save_to_hive(library, username)
+        print("saved to store")
+        return {"added": "yes"}
+    except Exception as e:
+        print(e)
+        return {"added": "no"}
+    
+@router.post("/create-base", response_class=JSONResponse)
+async def create_base(base: pydantic_models.Base):
+    username = "timwes21"
+    try:
+        faiss_save.create_knowledge_base(username, base.name)
+        return {"added": "yes"}
+    except Exception as e:
+        print(e)
+        return {"added": "no"}
+    
+
+@router.post("/get-video-rq", response_class=JSONResponse)
+async def get_video_rq(video: pydantic_models.Video):
+    try:
+        title, author, library = create_library(video.url)
+        path = f"short-term/{author}:{title}"
+        faiss_save.save_to_store(library, f"{video.id}/{path}")
+        change_knowlegde_source(video.id, path)
+        return {"saved": "yes", "title": title, "author": author}
+    except Exception as e:
+        print(e)
+        return {"saved": "no"}
+
+
+
+    
+@router.post("/forget-user")
+async def forget_user(uuid: pydantic_models.Uuid):
+    if uuid.token in os.listdir():
+        shutil.rmtree(uuid.token)
+
+
+
+    
+

@@ -1,0 +1,49 @@
+from fastapi import APIRouter, Depends
+import pydantic_models
+from Databases.redis.redis_client import change_knowlegde_source
+from Databases.postgres import dependencies
+from sqlalchemy.ext.asyncio import AsyncSession
+from Databases.postgres import db_models, dependencies
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from Databases.redis.redis_client import change_chat
+from fastapi.responses import JSONResponse
+import asyncio
+import os
+
+router = APIRouter()
+        
+@router.post("/messages")
+async def get_messages(knowledge_source: pydantic_models.Context, db: AsyncSession = Depends(dependencies.get_db)):
+    username = "timwes21"
+    result = await db.execute(
+        select(db_models.Message)
+        .where(db_models.Message.user_id == "timwes21")
+        .where(db_models.Message.context == knowledge_source.context)
+        # .order_by(db_models.Message.timestamp.desc())
+    )
+    messages = result.scalars().all()
+    change_chat(username, messages[0:20])
+    return messages
+
+
+@router.post("/get-knowledge-lists", response_class=JSONResponse)
+async def get_knowlegde_lists(user_info: pydantic_models.UserInfo):
+    print("here")
+    username = user_info.username
+    loop = asyncio.get_event_loop()
+    videos, bases = await asyncio.gather(
+        loop.run_in_executor(None, lambda: os.listdir(f"{username}/videos")),
+        loop.run_in_executor(None, lambda: os.listdir(f"{username}/knowledge_bases"))
+    )
+    return {"videos": videos, "bases": bases}
+
+@router.post("/get-knowledge-source", response_class=JSONResponse)
+async def get_knowlegde_source(knowlegde_source: pydantic_models.KnowledgeSource):
+    print(knowlegde_source)
+    if knowlegde_source.type == "hive":
+        path = knowlegde_source.name
+    else:
+        path = f"{knowlegde_source.type}/{knowlegde_source.name}"
+        
+    change_knowlegde_source(knowlegde_source.username, path)
