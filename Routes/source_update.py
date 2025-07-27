@@ -20,13 +20,12 @@ def create_library(url):
 
 @router.post("/save-url", response_class=JSONResponse)
 async def read_url(video: pydantic_models.Video):
-    username = "timwes21"
     try:
         title, author, library = create_library(video.url)
         print("got library")
-        faiss_save.save_to_store(library, f"{username}/videos/{author}:{title}")
+        faiss_save.save_to_store(library, f"{video.username}/videos/{author}:{title}")
         print("saved video")
-        faiss_save.save_to_hive(library, username)
+        faiss_save.save_to_hive(library, video.username)
         print("saved to store")
         return {"added": "yes"}
     except Exception as e:

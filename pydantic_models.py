@@ -15,14 +15,13 @@ class Docs(BaseModel):
 class NewMessage(BaseModel):
     html_message: str
 
-class Video(BaseModel):
+class Video(UserInfo):
     url: str
-    id: str
 
 class Base(BaseModel):
     name: str
 
-class Context(BaseModel):
+class Context(UserInfo):
     context: str
 
 class KnowledgeSource(UserInfo):
