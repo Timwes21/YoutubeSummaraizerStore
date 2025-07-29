@@ -26,7 +26,7 @@ class Context(UserInfo):
     context: str
 
 class KnowledgeSource(UserInfo):
-    type: str = Literal["hive", "videos", "knowledge_bases"]
+    type: str = Literal["hive", "videos"]
     name: str
 
 class Uuid(BaseModel):

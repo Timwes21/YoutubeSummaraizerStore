@@ -10,6 +10,10 @@ from Databases.redis.redis_client import change_chat
 from fastapi.responses import JSONResponse
 import asyncio
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
+start_path = os.environ["MNT_PATH"]
 
 router = APIRouter()
         
@@ -30,7 +34,8 @@ async def get_knowlegde_lists(user_info: pydantic_models.UserInfo):
     username = user_info.username
     loop = asyncio.get_event_loop()
     try:
-        videos = await asyncio.gather(loop.run_in_executor(None, lambda: os.listdir(f"{username}/videos")))
+        videos = await asyncio.gather(loop.run_in_executor(None, lambda: os.listdir(f"{start_path}/{username}/videos")))
+        videos = videos[0]
     except Exception as e:
         print(e)
         videos = []

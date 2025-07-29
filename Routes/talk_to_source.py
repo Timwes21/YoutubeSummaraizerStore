@@ -44,14 +44,15 @@ async def talk_to_video(ws: WebSocket, id : str, db: AsyncSession = Depends(depe
             print("***********************************************")
             print("here is the reply", reply)
             await ws.send_text(reply)
-            user_message_format = schemas.MessageCreate(user_id=id, message=parsed["message"], role="user", context=parsed["context"])
-            user_message = db_models.Message(**user_message_format.model_dump())
-            db.add(user_message)
+            if parsed["context"] != "newUrl":
+                user_message_format = schemas.MessageCreate(user_id=id, message=parsed["message"], role="user", context=parsed["context"])
+                user_message = db_models.Message(**user_message_format.model_dump())
+                db.add(user_message)
 
-            ai_message_format = schemas.MessageCreate(user_id=id, message=reply, role="ai", context=parsed["context"])
-            ai_message = db_models.Message(**ai_message_format.model_dump())
-            db.add(ai_message)
-            await db.commit()
+                ai_message_format = schemas.MessageCreate(user_id=id, message=reply, role="ai", context=parsed["context"])
+                ai_message = db_models.Message(**ai_message_format.model_dump())
+                db.add(ai_message)
+                await db.commit()
     except WebSocketDisconnect as e:
         print(e)
         if id in users_qas.keys():
@@ -62,11 +63,11 @@ async def talk_to_video(ws: WebSocket, id : str, db: AsyncSession = Depends(depe
 
 @router.websocket("/talk-to-unsaved-video/{id}")
 async def talk_to_unsaved(ws: WebSocket, id: str):
-    await ws.accept()
     url = await asyncio.to_thread(redis_client.get_unsaved_video, id)
     library = await asyncio.to_thread(create_library, url)
     retriever = library.as_retriever()
     users_qas[id] = retriever
+    await ws.accept()
     try: 
         while True:
             print("***********************************************")

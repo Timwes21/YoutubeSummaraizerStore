@@ -1,5 +1,6 @@
 from langchain_core.documents import Document
 from langchain_yt_dlp.youtube_loader import YoutubeLoaderDL
+from langchain_community.document_loaders import YoutubeLoader
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.proxies import WebshareProxyConfig
 from dotenv import load_dotenv
@@ -54,7 +55,7 @@ def get_video_info(url):
 
 
 def get_script(url: str):
-    id = get_id(url)
+    id = YoutubeLoader.extract_video_id(url)
     info = ytt_api.fetch(id)
     text = collect_text(info)
     return text

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pipelines import organize_docs
 import pydantic_models
 from Databases.FAISS import faiss_save 
-from Databases.redis.redis_client import change_knowlegde_source, save_video_url
+from Databases.redis.redis_client import change_knowlegde_source
 import os
 import shutil
 
@@ -36,8 +36,10 @@ async def read_url(video: pydantic_models.Video):
 @router.post("/get-video-rq", response_class=JSONResponse)
 async def get_video_rq(video: pydantic_models.Video):
     try:
-        title, author = get_video_info(video.url)
-        save_video_url(video.username, video.url)
+        title, author, library = create_library(video.url)
+        path = f"short-term/{author}:{title}"
+        faiss_save.save_to_store(library=library, path=f"{video.username}/{path}")
+        change_knowlegde_source(id=video.username, path=path)
         return {"saved": "yes", "title": title, "author": author}
     except Exception as e:
         print(e)
