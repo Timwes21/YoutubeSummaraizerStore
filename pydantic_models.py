@@ -20,6 +20,7 @@ class Video(UserInfo):
 
 class Base(BaseModel):
     name: str
+    id: str
 
 class Context(UserInfo):
     context: str

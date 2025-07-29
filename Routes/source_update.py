@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from pipelines import organize_docs
 import pydantic_models
 from Databases.FAISS import faiss_save 
-from Databases.redis.redis_client import change_knowlegde_source
+from Databases.redis.redis_client import change_knowlegde_source, save_video_url
 import os
 import shutil
 
@@ -25,18 +25,8 @@ async def read_url(video: pydantic_models.Video):
         print("got library")
         faiss_save.save_to_store(library, f"{video.username}/videos/{author}:{title}")
         print("saved video")
-        faiss_save.save_to_hive(library, video.username)
+        await faiss_save.save_to_hive(library, video.username)
         print("saved to store")
-        return {"added": "yes"}
-    except Exception as e:
-        print(e)
-        return {"added": "no"}
-    
-@router.post("/create-base", response_class=JSONResponse)
-async def create_base(base: pydantic_models.Base):
-    username = "timwes21"
-    try:
-        faiss_save.create_knowledge_base(username, base.name)
         return {"added": "yes"}
     except Exception as e:
         print(e)
@@ -48,8 +38,8 @@ async def get_video_rq(video: pydantic_models.Video):
     try:
         title, author, library = create_library(video.url)
         path = f"short-term/{author}:{title}"
-        faiss_save.save_to_store(library, f"{video.id}/{path}")
-        change_knowlegde_source(video.id, path)
+        faiss_save.save_to_store(library, f"{video.username}/{path}")
+        save_video_url(video.username, video.url)
         return {"saved": "yes", "title": title, "author": author}
     except Exception as e:
         print(e)
@@ -62,6 +52,7 @@ async def get_video_rq(video: pydantic_models.Video):
 async def forget_user(uuid: pydantic_models.Uuid):
     if uuid.token in os.listdir():
         shutil.rmtree(uuid.token)
+
 
 
 

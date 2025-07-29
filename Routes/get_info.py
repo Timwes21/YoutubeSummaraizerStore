@@ -15,14 +15,13 @@ router = APIRouter()
         
 @router.post("/messages")
 async def get_messages(context: pydantic_models.Context, db: AsyncSession = Depends(dependencies.get_db)):
-    username = "timwes21"
     result = await db.execute(
         select(db_models.Message)
         .where(db_models.Message.user_id == context.username)
         .where(db_models.Message.context == context.context)
     )
     messages = result.scalars().all()
-    change_chat(username, messages[0:20])
+    change_chat(context.username, messages[0:20])
     return messages
 
 

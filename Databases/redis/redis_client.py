@@ -42,3 +42,10 @@ def get_knowlegde_source_name(id: str):
     if a == None:
         return a
     return a.decode()
+
+
+def save_video_url(id, url):
+    r.set(f"{id}:new-video", url, ex=3600)
+
+def get_unsaved_video(id):
+    return r.get(f"{id}:new-video").decode()

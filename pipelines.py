@@ -48,6 +48,7 @@ def get_response(results, data, username, context):
                 "messages": chat,
             }
         )
+        reply = answer.html_message
         add_to_chat(username, "AI", reply)
     else:
         answer = chain.invoke(
@@ -55,8 +56,8 @@ def get_response(results, data, username, context):
                 "messages": [data],
             }
         )
+        reply = answer.html_message
 
-    reply = answer.html_message
     print(reply)
     return reply
     

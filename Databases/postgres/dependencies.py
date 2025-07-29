@@ -13,4 +13,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, clas
 
 async def get_db():
     async with SessionLocal() as db:
-        yield db
+        try:
+            yield db
+        finally: 
+            await db.close()
+
+
