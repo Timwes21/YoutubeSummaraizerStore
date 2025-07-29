@@ -27,14 +27,15 @@ async def get_messages(context: pydantic_models.Context, db: AsyncSession = Depe
 
 @router.post("/get-knowledge-lists", response_class=JSONResponse)
 async def get_knowlegde_lists(user_info: pydantic_models.UserInfo):
-    print("here")
     username = user_info.username
     loop = asyncio.get_event_loop()
-    videos, bases = await asyncio.gather(
-        loop.run_in_executor(None, lambda: os.listdir(f"{username}/videos")),
-        loop.run_in_executor(None, lambda: os.listdir(f"{username}/knowledge_bases"))
-    )
-    return {"videos": videos, "bases": bases}
+    try:
+        videos = await asyncio.gather(loop.run_in_executor(None, lambda: os.listdir(f"{username}/videos")))
+    except Exception as e:
+        print(e)
+        videos = []
+    return {"videos": videos}
+
 
 @router.post("/get-knowledge-source", response_class=JSONResponse)
 async def get_knowlegde_source(knowlegde_source: pydantic_models.KnowledgeSource):

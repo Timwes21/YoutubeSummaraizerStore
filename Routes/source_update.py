@@ -36,9 +36,7 @@ async def read_url(video: pydantic_models.Video):
 @router.post("/get-video-rq", response_class=JSONResponse)
 async def get_video_rq(video: pydantic_models.Video):
     try:
-        title, author, library = create_library(video.url)
-        path = f"short-term/{author}:{title}"
-        faiss_save.save_to_store(library, f"{video.username}/{path}")
+        title, author = get_video_info(video.url)
         save_video_url(video.username, video.url)
         return {"saved": "yes", "title": title, "author": author}
     except Exception as e:
