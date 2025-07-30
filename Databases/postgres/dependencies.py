@@ -7,7 +7,7 @@ load_dotenv()
 
 DATABASE_URL = os.environ["POSTGRES_URL"]
 
-engine = create_async_engine(DATABASE_URL)
+engine = create_async_engine(DATABASE_URL, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
 
 

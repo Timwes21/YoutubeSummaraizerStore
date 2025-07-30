@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 import pydantic_models
 from Databases.redis.redis_client import change_knowlegde_source
 from Databases.postgres import dependencies
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 from Databases.postgres import db_models, dependencies
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,12 +20,22 @@ router = APIRouter()
         
 @router.post("/messages")
 async def get_messages(context: pydantic_models.Context, db: AsyncSession = Depends(dependencies.get_db)):
-    result = await db.execute(
-        select(db_models.Message)
-        .where(db_models.Message.user_id == context.username)
-        .where(db_models.Message.context == context.context)
-    )
-    messages = result.scalars().all()
+    try:
+        result = await db.execute(
+            select(db_models.Message)
+            .where(db_models.Message.user_id == context.username)
+            .where(db_models.Message.context == context.context)
+        )
+        messages = result.scalars().all()
+    except DBAPIError as e:
+        print(e)
+        await db.rollback()
+        result = await db.execute(
+            select(db_models.Message)
+            .where(db_models.Message.user_id == context.username)
+            .where(db_models.Message.context == context.context)
+        )
+        messages = result.scalars().all()
     change_chat(context.username, messages[0:20])
     return messages
 

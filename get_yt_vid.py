@@ -4,6 +4,7 @@ from langchain_community.document_loaders import YoutubeLoader
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api.proxies import WebshareProxyConfig
 from dotenv import load_dotenv
+from my_yt_loader import UpdatedYoutubeLoader
 import os
 load_dotenv()
 
@@ -12,11 +13,9 @@ video_url = "https://youtu.be/HWRZRfmrxRc?si=_3ie0n8PfD-S8-HK"
 # def get_id(url: str):
 #     url.split
 
-ytt_api = YouTubeTranscriptApi(
-    proxy_config=WebshareProxyConfig(
-        proxy_username=os.environ["PROXY_USERNAME"],
-        proxy_password=os.environ["PROXY_PASSWORD"],
-    )
+proxy_config=WebshareProxyConfig(
+    proxy_username=os.environ["PROXY_USERNAME"],
+    proxy_password=os.environ["PROXY_PASSWORD"],
 )
 
 
@@ -54,15 +53,19 @@ def get_video_info(url):
     return video_details["title"], video_details["author"]
 
 
-def get_script(url: str):
-    id = YoutubeLoader.extract_video_id(url)
-    info = ytt_api.fetch(id)
-    text = collect_text(info)
-    return text
-
 # def get_script(url: str):
-#     loader = YoutubeLoader.from_youtube_url(url, add_video_info=False)
-#     return loader.load()
+#     id = YoutubeLoader.extract_video_id(url)
+#     info = ytt_api.fetch(id)
+#     text = collect_text(info)
+#     return text
+
+def get_script(url: str):
+    loader = UpdatedYoutubeLoader.from_youtube_url(
+        url, add_video_info=False
+    )
+
+    i = loader.load(proxy_config)
+    return i[0].page_content
 
 
 

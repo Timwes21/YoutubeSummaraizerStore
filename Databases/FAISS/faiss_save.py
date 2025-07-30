@@ -22,7 +22,7 @@ def create_library(docs):
     return library
 
 def save_to_store(library, path):
-    path = start_path + path
+    path = f"{start_path}/{path}"
     if os.path.exists(path):
         return
     library.save_local(path)
