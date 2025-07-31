@@ -5,6 +5,7 @@ from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import SystemMessage
 from Databases.redis.redis_client import add_to_chat, get_recent_chat
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 import pydantic_models
 
 
@@ -14,15 +15,24 @@ import pydantic_models
 def organize_docs(files_content):
     parser = PydanticOutputParser(pydantic_object=pydantic_models.Docs)
     instructions = parser.get_format_instructions()
-    prompt_template = ChatPromptTemplate.from_template("Condense this document into organized sections that make it easy to find things in a vector store, make sure each metadata is unique: {files_content} {format}")
+    prompt_template = ChatPromptTemplate.from_template("organize this document into organized sections without condensing it, that dont leave out any necessary detail, and make it easy to find things in a vector store by providing unique metadata: {files_content} {format}")
     prompt = prompt_template.partial(format=instructions)
     chain = prompt | llm | parser
-    res: pydantic_models.Docs = chain.invoke({"files_content": files_content})
-    print(res)
     docs = []
-    for item in res.docs:
-        docs.append(Document(page_content=item.content, metadata={"category": item.metadata}))
-    return docs
+    
+    splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
+    chunks = splitter.split_text(files_content)
+    print(type(chunks))
+    print(len(chunks))
+    print(len(chunks))
+    for chunk in chunks:
+        res: pydantic_models.Docs = chain.invoke({"files_content": chunk})
+        print("**************************************************")
+        print("here is the organized docs: ")
+        print(res)
+        for item in res.docs:
+            docs.append(Document(page_content=item.content, metadata={"category": item.metadata}))
+    return chunks
 
 def get_response(results, data, username, context):
     parser = PydanticOutputParser(pydantic_object=pydantic_models.NewMessage)

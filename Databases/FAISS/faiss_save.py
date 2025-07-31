@@ -11,15 +11,17 @@ start_path = os.environ["MNT_PATH"]
 
 def create_library(docs):
     text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-                chunk_overlap=100,
-            length_function=len
-        )
+        chunk_size=2000,
+        chunk_overlap=200,
+        length_function=len
+    )
 
-    docs = text_splitter.split_documents(docs)
+    docs = text_splitter.split_text(docs)
 
-    library = FAISS.from_documents(docs, embeddings)
+    library = FAISS.from_texts(docs, embeddings)
     return library
+
+
 
 def save_to_store(library, path):
     path = f"{start_path}/{path}"
